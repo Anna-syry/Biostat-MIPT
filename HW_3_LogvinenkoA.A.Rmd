@@ -1,0 +1,189 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+{r}
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+
+{r}
+works_dataset <- read_excel("pima.xlsx")
+
+{r}
+head(works_dataset)
+
+{r}
+colnames(works_dataset)
+str(works_dataset)
+
+cat("размер датасета works_dataset:", dim(works_dataset), "\n")
+
+{r}
+ #Проверка на нулевые значения в каждом столбце
+for (col in names(works_dataset)) {
+  zeros <- sum(works_dataset[[col]] == 0, na.rm = TRUE)
+  cat("количество нулевых значений в столбце", col, ":", zeros, "\n")
+}
+
+Задача 1. Рассчитайте описательные статистики для переменных glucose, pressure, mass.
+
+{r}
+# расчет описательных статистик для признака "glucose"
+glucose_summary <- works_dataset %>%
+  summarise(
+    Mean = mean(glucose, na.rm = TRUE),  # среднее значение
+    Median = median(glucose, na.rm = TRUE),  # медиана
+    Quantile_25 = quantile(glucose, na.rm = TRUE, probs = 0.25), # 25-й квантиль
+    Quantile_75 = quantile(glucose, na.rm = TRUE, probs = 0.75), # 75-й квантиль
+    Minimum = min(glucose, na.rm = TRUE),  # минимум
+    Maximum = max(glucose, na.rm = TRUE),  # максимум
+    StdDev = sd(glucose, na.rm = TRUE),  # стандартное отклонение
+    Variance = var(glucose, na.rm = TRUE)  # дисперсия
+  )
+
+print(glucose_summary)
+
+
+{r}
+# Расчет описательных статистик для признака "pressure"
+pressure_summary <- works_dataset %>%
+  summarise(
+    Mean = mean(pressure, na.rm = TRUE),  # Среднее значение
+    Median = median(pressure, na.rm = TRUE),  # Медиана
+    Quantile_25 = quantile(pressure, na.rm = TRUE, probs = 0.25),  # 25-й квантиль
+    Quantile_75 = quantile(pressure, na.rm = TRUE, probs = 0.75),  # 75-й квантиль
+    Minimum = min(pressure, na.rm = TRUE),  # Минимум
+    Maximum = max(pressure, na.rm = TRUE),  # Максимум
+    StdDev = sd(pressure, na.rm = TRUE),  # Стандартное отклонение
+    Variance = var(pressure, na.rm = TRUE)  # Дисперсия
+  )
+
+print(pressure_summary)
+
+{r}
+mass_summary <- works_dataset %>%
+  summarise(
+    Mean = mean(mass, na.rm = TRUE),  # Среднее значение
+    Median = median(mass, na.rm = TRUE),  # Медиана
+    Quantile_25 = quantile(mass, na.rm = TRUE, probs = 0.25),  # 25-й квантиль
+    Quantile_75 = quantile(mass, na.rm = TRUE, probs = 0.75),  # 75-й квантиль
+    Minimum = min(mass, na.rm = TRUE),  # Минимум
+    Maximum = max(mass, na.rm = TRUE),  # Максимум
+    StdDev = sd(mass, na.rm = TRUE),  # Стандартное отклонение
+    Variance = var(mass, na.rm = TRUE)  # Дисперсия
+  )
+
+print(mass_summary)
+
+Задача 2. Рассчитайте описательную статистику для переменной diabetes.
+
+Создайте на основе переменной age новую переменную age_group, которая будет отражать следующие возрастные группы: 21–35, 36–49 и 50+. Посчитайте описательную статистику для новой переменной.
+
+Для категориальных переменных в R, описательные статистики включают подсчет количества уникальных значений и их частоты в датасете. Это позволяет понять распределение категорий в переменной и их соотношение.
+
+{r}
+# Подсчитайте количество каждого уникального значения в переменной "diabetes"
+diabetes_counts <- table(works_dataset$diabetes)
+
+print(diabetes_counts)
+
+{r}
+ggplot(works_dataset, aes(x = diabetes)) + geom_bar() + 
+  labs(title = "Частоты категорий diabetes", x = "Диагноз", y = "Частота")
+
+{r}
+# группировку данных для признака age_group сделаем при помощи функции cut() 
+ works_dataset$age_group <- cut(works_dataset$age, breaks = c(20, 35, 49, Inf), labels = c("21–35", "36–49", "50+"), right = FALSE)  
+
+head(works_dataset[, c("age", "age_group")]) 
+
+{r}
+# подсчет описательных статистик для переменной "age_group"
+age_group_summary <- works_dataset %>%
+  group_by(age_group) %>%
+  summarise(
+    count = n(),                # Количество наблюдений
+    mean_age = mean(age, na.rm = TRUE),   # Средний возраст
+    median_age = median(age, na.rm = TRUE),   # Медианный возраст
+    min_age = min(age, na.rm = TRUE),     # Минимальный возраст
+    max_age = max(age, na.rm = TRUE),      # Максимальный возраст
+    q25_age = quantile(age, 0.25, na.rm = TRUE),  # 25-й квантиль
+    q75_age = quantile(age, 0.75, na.rm = TRUE),  # 75-й квантиль
+    sd_age = sd(age, na.rm = TRUE),           # Стандартное отклонение
+    var_age = var(age, na.rm = TRUE)          # Дисперсия
+  )
+print(age_group_summary)
+
+Определите 90% доверительный интервал для переменной pedigree.
+
+{r}
+# Определение переменной pedigree
+pedigree_values <- works_dataset$pedigree
+
+# Подсчет квантилей для получения границ доверительного интервала
+lower_quantile <- quantile(pedigree_values, 0.05)  
+upper_quantile <- quantile(pedigree_values, 0.95)  
+
+# Вывод результатов
+cat("90% доверительный интервал для переменной 'pedigree': 
+    [", lower_quantile, ", ", upper_quantile, "]\n")
+
+
+{r}
+# визуализация при помощи гистограммы
+hist(pedigree_values, breaks = 20, main = "Распределение переменной pedigree      с доверительным интервалом",
+     xlab = "значение переменной pedigree", ylab = "Частота")
+
+# добавление горизонтальной линии для доверительного интервала
+abline(h = 0, col = "red")  # Горизонтальная линия для оси X
+abline(v = lower_quantile, col = "blue")  
+abline(v = upper_quantile, col = "blue") 
+
+Задача 4. Постройте график плотности вероятности для переменной glucose и отметьте на нем среднее значение. Для той же переменной постройте гистограмму. Постройте два ящика с усами для значений pos и neg соответственно переменной diabetes.
+
+{r}
+# График плотности вероятности с отметкой среднего значения
+ggplot(works_dataset, aes(x = glucose)) +
+  geom_density(fill = "lightblue", alpha = 0.6) +
+  geom_vline(aes(xintercept = mean(glucose, na.rm = TRUE)), 
+             color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Плотность вероятности для переменной glucose",
+       x = "Glucose", y = "Плотность") +
+  theme_minimal()
+
+
+{r}
+# Гистограмма переменной glucose
+ggplot(works_dataset, aes(x = glucose)) +
+  geom_histogram(binwidth = 10, fill = "lightblue", color = "black", alpha = 0.8) +
+  geom_vline(aes(xintercept = mean(glucose, na.rm = TRUE)), 
+             color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Гистограмма переменной glucose",
+       x = "Glucose", y = "Частота") +
+  theme_minimal()
+
+
+{r}
+# построение ящика с усами для переменной diabetes
+ggplot(works_dataset, aes(x = diabetes, y = glucose)) +  
+  # задаем данные
+  geom_boxplot(fill = "lightblue", color = "black", alpha = 0.6) +  
+  # Добавление ящика с усами с оформлением
+  labs(title = "Ящик с усами для переменной glucose по diabetes",  
+       x = "Diabetes", y = "Glucose") +  
+  theme_minimal()  # Применение минимального оформления графика
+
+При визуальной оценке можно сказать, что при диабете уровень глюкозы значимо и ожидаемо выше.
+
+{r}
+# Построение диаграмм рассеяния для переменных triceps и mass с группировкой по diabetes
+ggplot(works_dataset, aes(x = triceps, y = mass, color = diabetes, fill = diabetes)) +  
+  geom_point(shape = 21, size = 3, alpha = 0.7) +  # Добавление точек с оформлением
+  labs(title = "Диаграмма рассеяния для triceps и mass по diabetes",  # Заголовок графика
+       x = "Triceps", y = "Mass", color = "Diabetes", fill = "Diabetes") +  # Подписи осей и легенды
+  theme_minimal()  # Применение минимального оформления графика
+
+при визуальной оценке можно предположить следующее. Угадывается тренд линейного распределения точек между массой тела и обхватом трицепса, т.е. возможна прямая связь. Плотность распределение точек с наличием диабета увеличивается вместе с ромтом индекса массы тела и увеличением обхвата трицепса.
